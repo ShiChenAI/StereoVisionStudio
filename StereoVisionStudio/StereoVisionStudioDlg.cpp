@@ -483,5 +483,5 @@ void CStereoVisionStudioDlg::OnBnClickedBtnMarch()
 	matchPara.extrinsicFilename = m_prjPath + "\\extrinsics.yml";
 
 	// Test Synced
-
+	// Test 222
 }
