@@ -21,17 +21,17 @@ class CStereoMatchPara
 {
 	/*  [--algorithm=bm|sgbm|hh|sgbm3way] [--blocksize=<block_size>]\n"
 	"[--max-disparity=<max_disparity>] [--scale=scale_factor>] [-i=<intrinsic_filename>] [-e=<extrinsic_filename>]\n"
-		"[--no-display] [-o=<disparity_image>] [-p=<point_cloud_file>]/**/
+	"[--no-display] [-o=<disparity_image>] [-p=<point_cloud_file>]/**/
 public:
 	CString prjName;		// project name
 	int algorithm;			// algorithm: 0-BM, 1-SGBM, 2-HH, 3-VAR, 4-SGBM3ways
 	int blockSize;		// block size
 	int maxDisparity;	// max disparity
 	double scaleFactor;		// scale factor
-	//Mat leftImage;
-	//Mat rightImage;
-	CString leftImgFileName;
-	CString rightImgFileName;
+	Mat leftImage;
+	Mat rightImage;
+	//CString leftImgFileName;
+	//CString rightImgFileName;
 	CString intrinsicFilename;
 	CString extrinsicFilename;
 };

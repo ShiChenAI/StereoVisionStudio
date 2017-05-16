@@ -64,6 +64,7 @@ CStereoVisionStudioDlg::CStereoVisionStudioDlg(CWnd* pParent /*=NULL*/)
 	, m_editMaxDisparity(0)
 	, m_editScaleFactor(0)
 	, m_radMatchMethod(0)
+	, m_editPrjPath(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -85,6 +86,7 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_MAX_DISPARITY, m_editMaxDisparity);
 	DDX_Text(pDX, IDC_EDIT_SCALE_FACTOR, m_editScaleFactor);
 	DDX_Radio(pDX, IDC_RAD_BM, m_radMatchMethod);
+	DDX_Text(pDX, IDC_EDIT_PRJ_PATH, m_editPrjPath);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -101,6 +103,8 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_DEFAULT_CAL_PARA, &CStereoVisionStudioDlg::OnClickedBtnDefaultCalPara)
 	ON_BN_CLICKED(IDC_BTN_CALIBRATION, &CStereoVisionStudioDlg::OnBnClickedBtnCalibration)
 	ON_BN_CLICKED(IDC_BTN_MARCH, &CStereoVisionStudioDlg::OnBnClickedBtnMarch)
+	ON_BN_CLICKED(IDC_BTN_STOP_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnStopMatch)
+	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
 END_MESSAGE_MAP()
 
 
@@ -277,6 +281,28 @@ void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 
 		// Draw image to HDC
 		ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+	}
+
+	// streo match calculation
+	if (m_matchFlag)
+	{
+		UpdateData(TRUE);
+		CStereoMatchPara matchPara;
+		matchPara.prjName = m_prjPath;
+		matchPara.algorithm = m_radMatchMethod;
+		matchPara.blockSize = m_editBlockSize;
+		matchPara.maxDisparity = m_editMaxDisparity;
+		matchPara.scaleFactor = m_editScaleFactor;
+		matchPara.leftImage = m_lfImage;
+		matchPara.rightImage = m_riImage;
+		//para0.leftImgFileName;
+		//para0.rightImgFileName;
+		//para0.intrinsicFilename;
+		//para0.extrinsicFilename;
+
+		CStereoMatch cal;
+		cal.Calculation(matchPara, m_dsImage);
+		ShowImage(m_dsImage, m_copyDsImage, m_hDCDs, m_rectDs);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
@@ -470,18 +496,41 @@ void CStereoVisionStudioDlg::OnBnClickedBtnCalibration()
 void CStereoVisionStudioDlg::OnBnClickedBtnMarch()
 {
 	UpdateData(TRUE);
+	m_matchFlag = true;
+}
 
-	CStereoMatchPara matchPara;
-	matchPara.prjName = m_editPrjName;
-	matchPara.algorithm = m_radMatchMethod;
-	matchPara.blockSize = m_editBlockSize;
-	matchPara.maxDisparity = m_editMaxDisparity;
-	matchPara.scaleFactor = m_editScaleFactor;
-	//matchPara.leftImgFileName = ;
-	//matchPara.rightImgFileName = ;
-	matchPara.intrinsicFilename = m_prjPath + "\\intrinsics.yml";
-	matchPara.extrinsicFilename = m_prjPath + "\\extrinsics.yml";
 
-	// Test Synced
-	// Test 222
+void CStereoVisionStudioDlg::OnBnClickedBtnStopMatch()
+{
+	UpdateData(TRUE);
+	m_matchFlag = false;
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
+{
+	char szPath[MAX_PATH];
+	CString str;
+
+	BROWSEINFO bi;
+	bi.hwndOwner = m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szPath;
+	bi.lpszTitle = "Please select broower.";
+	bi.ulFlags = 0;
+	bi.lpfn = 0;
+	bi.lParam = 0;
+
+	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+	if (lp && SHGetPathFromIDList(lp, szPath))
+	{
+		str.Format("%s", szPath);
+		m_editPrjPath = str;
+		m_prjPath = str;
+		UpdateData(FALSE);
+	}
+	else 
+	{
+		AfxMessageBox("Invalid path.");
+	}
 }
