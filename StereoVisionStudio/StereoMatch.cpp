@@ -14,7 +14,7 @@ CStereoMatch::~CStereoMatch()
 void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 {
 	int SADWindowSize, numberOfDisparities, alg;
-	bool no_display;
+	//bool no_display;
 	float scale;
 
 	Ptr<StereoBM> bm = StereoBM::create(16, 9);
@@ -24,16 +24,24 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 	string extrinsic_filename = para.extrinsicFilename.GetBuffer(0);
 	numberOfDisparities = para.maxDisparity;
 	scale = para.scaleFactor;
+
+	Mat img1;
+	Mat img2;
+
 	int color_mode = -1;
 	if (para.algorithm == 0)
 	{
-		color_mode = 0;
+		cvtColor(para.leftImage, img1, CV_BGR2GRAY);
+		cvtColor(para.rightImage, img2, CV_BGR2GRAY);
+	}
+	else
+	{
+		para.leftImage.copyTo(img1);
+		para.rightImage.copyTo(img2);
 	}
 	alg = para.algorithm;
 	enum { STEREO_BM = 0, STEREO_SGBM = 1, STEREO_HH = 2, STEREO_VAR = 3, STEREO_3WAY = 4 };
 
-	Mat img1 = imread(para.leftImgFileName.GetBuffer(0), color_mode);
-	Mat img2 = imread(para.rightImgFileName.GetBuffer(0), color_mode);
 
 	if (img1.empty())
 	{
@@ -157,19 +165,19 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 		disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities*16.));
 	else
 		disp.convertTo(disp8, CV_8U);
-	if (!no_display)
-	{
-		namedWindow("left", 1);
-		imshow("left", img1);
-		namedWindow("right", 1);
-		imshow("right", img2);
-		namedWindow("disparity", 0);
-		imshow("disparity", disp8);
-		printf("press any key to continue...");
-		fflush(stdout);
-		waitKey();
-		printf("\n");
-	}
+	//if (!no_display)
+	//{
+	//	namedWindow("left", 1);
+	//	imshow("left", img1);
+	//	namedWindow("right", 1);
+	//	imshow("right", img2);
+	//	namedWindow("disparity", 0);
+	//	imshow("disparity", disp8);
+	//	printf("press any key to continue...");
+	//	fflush(stdout);
+	//	waitKey();
+	//	printf("\n");
+	//}
 
 	//if (!disparity_filename.empty())
 	//	imwrite(disparity_filename, disp8);

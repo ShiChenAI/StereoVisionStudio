@@ -59,18 +59,27 @@ private:
 	VideoCapture m_riCam;
 	Mat m_lfImage;
 	Mat m_riImage;
+	Mat m_dsImage;
 	IplImage m_copyLfImage;
 	IplImage m_copyRiImage;
+	IplImage m_copyDsImage;
 
 	// Picture Control parameters
 	HDC m_hDCLf;
 	CRect m_rectLf;
 	CDC *m_pDCLf;
 	CWnd *m_pwndLf;
+
 	HDC m_hDCRi;
 	CRect m_rectRi;
 	CDC *m_pDCRi;
 	CWnd *m_pwndRi;
+
+	// parameter for disparity view(HDC, Crect, CDC, Cwnd)
+	HDC m_hDCDs;
+	CRect m_rectDs;
+	CDC *m_pDCDs;
+	CWnd *m_pwndDs;
 
 	// Draw image to Picture Control
 	void ShowImage(Mat &frame, IplImage &image, HDC &hdc, CRect &rect);
@@ -100,4 +109,8 @@ public:
 	double m_editScaleFactor;
 	int m_radMatchMethod;
 	afx_msg void OnBnClickedBtnMarch();
+	bool m_matchFlag = false;
+	CString m_editPrjPath;
+	afx_msg void OnBnClickedBtnStopMatch();
+	afx_msg void OnBnClickedSelectPrj();
 };
