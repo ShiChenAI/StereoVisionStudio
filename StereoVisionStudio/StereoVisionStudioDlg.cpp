@@ -516,7 +516,7 @@ void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
 	bi.hwndOwner = m_hWnd;
 	bi.pidlRoot = NULL;
 	bi.pszDisplayName = szPath;
-	bi.lpszTitle = "Please select broower.";
+	bi.lpszTitle = "Please select project.";
 	bi.ulFlags = 0;
 	bi.lpfn = 0;
 	bi.lParam = 0;
