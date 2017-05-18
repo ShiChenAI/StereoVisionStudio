@@ -191,6 +191,8 @@
     <ClInclude Include="StereoVisionStudio.h" />
     <ClInclude Include="StereoVisionStudioDlg.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="tinystr.h" />
+    <ClInclude Include="tinyxml.h" />
     <ClInclude Include="VideoUtility.h" />
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +209,10 @@
     <ClCompile Include="StereoMatch.cpp" />
     <ClCompile Include="StereoVisionStudio.cpp" />
     <ClCompile Include="StereoVisionStudioDlg.cpp" />
+    <ClCompile Include="tinystr.cpp" />
+    <ClCompile Include="tinyxml.cpp" />
+    <ClCompile Include="tinyxmlerror.cpp" />
+    <ClCompile Include="tinyxmlparser.cpp" />
     <ClCompile Include="VideoUtility.cpp" />
   </ItemGroup>
   <ItemGroup>

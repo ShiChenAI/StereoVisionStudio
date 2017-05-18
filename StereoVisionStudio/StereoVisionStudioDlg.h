@@ -16,6 +16,8 @@
 #include <io.h> 
 #include "ConvertUtility.h"
 #include "StereoCalib.h"
+#include "StereoMatch.h"
+#include "tinyxml.h" 
 
 using namespace std;
 using namespace cv;
@@ -121,4 +123,5 @@ public:
 	long m_editSpeckeWinSize;
 	long m_editTextThres;
 	long m_editUniqeRatio;
+	afx_msg void OnBnClickedBtnSelectPrjCal();
 };

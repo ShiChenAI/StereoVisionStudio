@@ -6,7 +6,6 @@
 #include "StereoVisionStudio.h"
 #include "StereoVisionStudioDlg.h"
 #include "afxdialogex.h"
-#include "StereoMatch.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -120,6 +119,7 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_STOP_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnStopMatch)
 	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
 	ON_BN_CLICKED(IDC_BTN_DEFAULT_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch)
+	ON_BN_CLICKED(IDC_BTN_SELECT_PRJ_CAL, &CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal)
 END_MESSAGE_MAP()
 
 
@@ -460,6 +460,17 @@ void CStereoVisionStudioDlg::OnClickedBtnCreatePrj()
 
 		m_imagelist.clear();
 
+		// Creat XML file
+		TiXmlDocument *writeDoc = new TiXmlDocument;
+		TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "UTF-8", "yes");
+		writeDoc->LinkEndChild(decl);
+		TiXmlElement *RootElement = new TiXmlElement("opencv_storage");
+		writeDoc->LinkEndChild(RootElement);
+		TiXmlElement *StuElement = new TiXmlElement("imagelist");
+		RootElement->LinkEndChild(StuElement);
+		CString xmlFileName = m_prjPath + "\\" + m_editPrjName + ".xml";
+		writeDoc->SaveFile(xmlFileName);
+		delete writeDoc;
 		UpdateData(FALSE);
 
 		return;
@@ -581,5 +592,49 @@ void CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch()
 	m_editSpeckleRange = 32;
 	m_editMaxDiff = 1;
 
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal()
+{
+	// Select project path
+	char szPath[MAX_PATH];
+	CString str;
+
+	BROWSEINFO bi;
+	bi.hwndOwner = m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szPath;
+	bi.lpszTitle = "Please select project.";
+	bi.ulFlags = 0;
+	bi.lpfn = 0;
+	bi.lParam = 0;
+
+	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+	if (lp && SHGetPathFromIDList(lp, szPath))
+	{
+		str.Format("%s", szPath);
+		m_editPrjPath = str;
+		m_prjPath = str;
+	}
+	else
+	{
+		AfxMessageBox("Invalid path.");
+	}
+
+	// Get current images
+	CCommonUtility::GetFiles(m_prjPath, "*.png", m_imagelist);
+
+	// Get XML file
+	vector<CString> xmlFiles;
+	if (CCommonUtility::GetFiles(m_prjPath, "*.xml", xmlFiles))
+	{
+		m_editPrjName = CCommonUtility::GetFileName(xmlFiles[0], false);
+		m_prjPath = CCommonUtility::GetCurDirectory();
+		m_prjPath += (CString)"\\";
+		m_prjPath += m_editPrjName;
+	}
+	
 	UpdateData(FALSE);
 }
