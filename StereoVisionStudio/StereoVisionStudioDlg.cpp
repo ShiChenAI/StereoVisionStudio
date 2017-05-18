@@ -65,6 +65,13 @@ CStereoVisionStudioDlg::CStereoVisionStudioDlg(CWnd* pParent /*=NULL*/)
 	, m_editScaleFactor(0)
 	, m_radMatchMethod(0)
 	, m_editPrjPath(_T(""))
+	, m_editMaxDiff(0)
+	, m_editMinDisparity(0)
+	, m_editPreCap(0)
+	, m_editSpeckleRange(0)
+	, m_editSpeckeWinSize(0)
+	, m_editTextThres(0)
+	, m_editUniqeRatio(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -87,6 +94,13 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SCALE_FACTOR, m_editScaleFactor);
 	DDX_Radio(pDX, IDC_RAD_BM, m_radMatchMethod);
 	DDX_Text(pDX, IDC_EDIT_PRJ_PATH, m_editPrjPath);
+	DDX_Text(pDX, IDC_EDIT_MAX_DIFF, m_editMaxDiff);
+	DDX_Text(pDX, IDC_EDIT_MIN_DISPARITY, m_editMinDisparity);
+	DDX_Text(pDX, IDC_EDIT_PRE_CAP, m_editPreCap);
+	DDX_Text(pDX, IDC_EDIT_SPECKLE_RANGE, m_editSpeckleRange);
+	DDX_Text(pDX, IDC_EDIT_SPECKLE_WIN_SIZE, m_editSpeckeWinSize);
+	DDX_Text(pDX, IDC_EDIT_TEXT_THRES, m_editTextThres);
+	DDX_Text(pDX, IDC_EDIT_UNIQE_RATIO, m_editUniqeRatio);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -105,6 +119,7 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_MARCH, &CStereoVisionStudioDlg::OnBnClickedBtnMarch)
 	ON_BN_CLICKED(IDC_BTN_STOP_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnStopMatch)
 	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
+	ON_BN_CLICKED(IDC_BTN_DEFAULT_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch)
 END_MESSAGE_MAP()
 
 
@@ -177,6 +192,7 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	GetDlgItem(IDC_EDIT_PRJ_NAME)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BTN_CREATE_PRJ)->EnableWindow(FALSE);
 	GetDlgItem(IDC_CAP_IMAGE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BTN_STOP_MATCH)->EnableWindow(FALSE);
 
 	// Defaults to using BOUGUET's method for calibration
 	m_radMethod = 0;
@@ -295,10 +311,15 @@ void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 		matchPara.scaleFactor = m_editScaleFactor;
 		matchPara.leftImage = m_lfImage;
 		matchPara.rightImage = m_riImage;
-		//para0.leftImgFileName;
-		//para0.rightImgFileName;
-		//para0.intrinsicFilename;
-		//para0.extrinsicFilename;
+		matchPara.disp12MaxDiff = m_editMaxDiff;
+		matchPara.minDisparity = m_editMinDisparity;
+		matchPara.preFilterCap = m_editPreCap;
+		matchPara.speckleRange = m_editSpeckleRange;
+		matchPara.speckleWindowSize = m_editSpeckeWinSize;
+		matchPara.textureThreshold = m_editTextThres;
+		matchPara.uniquenessRatio = m_editUniqeRatio;
+		matchPara.intrinsicFilename = m_prjPath + "\\intrinsics.yml";
+		matchPara.extrinsicFilename = m_prjPath + "\\extrinsics.yml";
 
 		CStereoMatch cal;
 		cal.Calculation(matchPara, m_dsImage);
@@ -468,7 +489,11 @@ void CStereoVisionStudioDlg::OnClickedCapImage()
 
 void CStereoVisionStudioDlg::OnClickedBtnDefaultCalPara()
 {
-	// TODO: Add your control notification handler code here
+	m_editNx = 9;
+	m_editNy = 6;
+	m_editSquareSize = 26;
+
+	UpdateData(FALSE);
 }
 
 
@@ -489,21 +514,28 @@ void CStereoVisionStudioDlg::OnBnClickedBtnCalibration()
 
 	CStereoCalib cal;
 	cal.Calibration(calPara);
-
 }
 
 
 void CStereoVisionStudioDlg::OnBnClickedBtnMarch()
 {
-	UpdateData(TRUE);
 	m_matchFlag = true;
+
+	// Enable & Disable some buttons
+	GetDlgItem(IDC_BTN_MARCH)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BTN_STOP_MATCH)->EnableWindow(TRUE);
+	UpdateData(FALSE);
 }
 
 
 void CStereoVisionStudioDlg::OnBnClickedBtnStopMatch()
 {
-	UpdateData(TRUE);
 	m_matchFlag = false;
+
+	// Enable & Disable some buttons
+	GetDlgItem(IDC_BTN_MARCH)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BTN_STOP_MATCH)->EnableWindow(FALSE);
+	UpdateData(FALSE);
 }
 
 
@@ -533,4 +565,21 @@ void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
 	{
 		AfxMessageBox("Invalid path.");
 	}
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch()
+{
+	m_editBlockSize = 17;
+	m_editMaxDisparity = 128;
+	m_editMinDisparity = 0;
+	m_editTextThres = 10;
+	m_editScaleFactor = 1;
+	m_editPreCap = 31;
+	m_editUniqeRatio = 15;
+	m_editSpeckeWinSize = 100;
+	m_editSpeckleRange = 32;
+	m_editMaxDiff = 1;
+
+	UpdateData(FALSE);
 }
