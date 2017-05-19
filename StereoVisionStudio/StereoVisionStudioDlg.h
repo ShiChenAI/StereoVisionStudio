@@ -22,6 +22,8 @@
 using namespace std;
 using namespace cv;
 
+
+
 // CStereoVisionStudioDlg dialog
 class CStereoVisionStudioDlg : public CDialogEx
 {
@@ -86,6 +88,11 @@ private:
 	// Draw image to Picture Control
 	void ShowImage(Mat &frame, IplImage &image, HDC &hdc, CRect &rect);
 
+	// Initialize Statusbar
+	void InitStatusbar();
+
+	
+
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CComboBox m_cboCamLeft;
@@ -124,4 +131,5 @@ public:
 	long m_editTextThres;
 	long m_editUniqeRatio;
 	afx_msg void OnBnClickedBtnSelectPrjCal();
+	CStatusBar m_Statusbar;
 };

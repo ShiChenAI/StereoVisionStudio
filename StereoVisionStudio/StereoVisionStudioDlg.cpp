@@ -122,6 +122,10 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SELECT_PRJ_CAL, &CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal)
 END_MESSAGE_MAP()
 
+static UINT indicators[] =
+{
+	ID_SEPARATOR,
+};
 
 // CStereoVisionStudioDlg message handlers
 
@@ -212,6 +216,9 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_hDCRi = m_pDCRi->GetSafeHdc();
 	m_pwndRi->GetClientRect(&m_rectRi);
 
+	// Initialize Statusbar
+	InitStatusbar();
+
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -277,6 +284,18 @@ void CStereoVisionStudioDlg::ShowImage(Mat & frame, IplImage & image, HDC & hdc,
 	CvvImage cvvImage;
 	cvvImage.CopyOf(&image, 3);
 	cvvImage.DrawToHDC(hdc, &rect);
+}
+
+void CStereoVisionStudioDlg::InitStatusbar()
+{
+	m_Statusbar.Create(this);
+	m_Statusbar.SetIndicators(indicators, sizeof(indicators) / sizeof(UINT));
+	CRect rect;
+	GetWindowRect(rect);
+	//m_Statusbar.SetPaneInfo(0, ID_SEPARATOR, SBPS_STRETCH, rect.Width() / 4);
+	m_Statusbar.SetPaneInfo(0, ID_SEPARATOR, SBPS_STRETCH, rect.Width());
+	m_Statusbar.SetPaneText(0, "Ready.");
+	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 }
 
 void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
@@ -638,3 +657,4 @@ void CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal()
 	
 	UpdateData(FALSE);
 }
+

@@ -14,6 +14,7 @@
 #include <ctype.h>
 
 #include "ConvertUtility.h"
+#include "StereoVisionStudioDlg.h"
 
 using namespace std;
 using namespace cv;
