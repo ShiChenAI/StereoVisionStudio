@@ -215,6 +215,11 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_pDCRi = m_pwndRi->GetDC();
 	m_hDCRi = m_pDCRi->GetSafeHdc();
 	m_pwndRi->GetClientRect(&m_rectRi);
+	
+	m_pwndDs = GetDlgItem(IDC_PIC_DISPARITY_CAM);
+	m_pDCDs = m_pwndDs->GetDC();
+	m_hDCDs = m_pDCDs->GetSafeHdc();
+	m_pwndDs->GetClientRect(&m_rectDs);
 
 	// Initialize Statusbar
 	InitStatusbar();

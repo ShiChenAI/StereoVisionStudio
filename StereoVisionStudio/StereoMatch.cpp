@@ -247,7 +247,10 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 
 	t = getTickCount() - t;
 	//printf("Time elapsed: %fms\n", t * 1000 / getTickFrequency());
-	pWnd->m_Statusbar.SetPaneText(0, "Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	CString strElapsedTime;
+	strElapsedTime.Format(TEXT("Time elapsed: %fms\n"), t * 1000 / getTickFrequency());
+	//pWnd->m_Statusbar.SetPaneText(0, "Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	pWnd->m_Statusbar.SetPaneText(0, strElapsedTime);
 
 	//disp = dispp.colRange(numberOfDisparities, img1p.cols);
 	if (alg != STEREO_VAR)
