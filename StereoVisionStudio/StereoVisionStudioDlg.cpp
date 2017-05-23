@@ -100,6 +100,16 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SPECKLE_WIN_SIZE, m_editSpeckeWinSize);
 	DDX_Text(pDX, IDC_EDIT_TEXT_THRES, m_editTextThres);
 	DDX_Text(pDX, IDC_EDIT_UNIQE_RATIO, m_editUniqeRatio);
+	DDX_Control(pDX, IDC_SLIDE_MAX_DISPARITY, m_sliderMaxDisparity);
+	DDX_Control(pDX, IDC_SLIDER_BLOCK_SIZE, m_sliderBlockSize);
+	DDX_Control(pDX, IDC_SLIDER_MAX_DIFF, m_sliderMaxDiff);
+	DDX_Control(pDX, IDC_SLIDER_MIN_DISPARITY, m_sliderMinDisparity);
+	DDX_Control(pDX, IDC_SLIDER_PRE_CAP, m_sliderPreCap);
+	DDX_Control(pDX, IDC_SLIDER_SCALE_FACTOR, m_sliderScaleFactor);
+	DDX_Control(pDX, IDC_SLIDER_SPECKLE_RANGE, m_sliderSpeckleRange);
+	DDX_Control(pDX, IDC_SLIDER_SPECKLE_WIN_SIZE, m_sliderSpeckleWinSize);
+	DDX_Control(pDX, IDC_SLIDER_TEXT_THRES, m_sliderTextThres);
+	DDX_Control(pDX, IDC_SLIDER_UNIQE_RATIO, m_sliderUniqeRatio);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -120,6 +130,14 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
 	ON_BN_CLICKED(IDC_BTN_DEFAULT_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch)
 	ON_BN_CLICKED(IDC_BTN_SELECT_PRJ_CAL, &CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal)
+	ON_WM_HSCROLL()
+	ON_BN_CLICKED(IDC_RAD_BM, &CStereoVisionStudioDlg::OnBnClickedRadBm)
+	ON_BN_CLICKED(IDC_RAD_SGBM, &CStereoVisionStudioDlg::OnBnClickedRadSgbm)
+	ON_BN_CLICKED(IDC_RAD_HH, &CStereoVisionStudioDlg::OnBnClickedRadHh)
+	ON_BN_CLICKED(IDC_RAD_VAR, &CStereoVisionStudioDlg::OnBnClickedRadVar)
+	ON_BN_CLICKED(IDC_RAD_CGBM3WAYS, &CStereoVisionStudioDlg::OnBnClickedRadCgbm3ways)
+	ON_BN_CLICKED(IDC_RAD_BOUGUET, &CStereoVisionStudioDlg::OnBnClickedRadBouguet)
+	ON_BN_CLICKED(IDC_RAD_HARTLEY, &CStereoVisionStudioDlg::OnBnClickedRadHartley)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -221,8 +239,15 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_hDCDs = m_pDCDs->GetSafeHdc();
 	m_pwndDs->GetClientRect(&m_rectDs);
 
+	// Initialize Slider
+	InitSliders();
+
 	// Initialize Statusbar
 	InitStatusbar();
+
+	// Set default parameters
+	SetMatchDefaultPara();
+	SetCalDefaultPara();
 
 	UpdateData(FALSE);
 
@@ -301,6 +326,72 @@ void CStereoVisionStudioDlg::InitStatusbar()
 	m_Statusbar.SetPaneInfo(0, ID_SEPARATOR, SBPS_STRETCH, rect.Width());
 	m_Statusbar.SetPaneText(0, "Ready.");
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
+}
+
+void CStereoVisionStudioDlg::InitSliders()
+{
+	// BlockSize: 
+	// BM: 5X5~255X255 (usually 5X5~21X21)
+	// SGBM: 1X1~11X11 (usually 3X3~11X11)
+	m_sliderBlockSize.SetRange(0, 125);
+
+	// Max disparity: 16~256
+	m_sliderMaxDisparity.SetRange(1, 16);
+
+	// Min disparity: -64~64 (default: 0)
+	m_sliderMinDisparity.SetRange(-64, 64);
+
+	// Texture threshold: 0~60
+	m_sliderTextThres.SetRange(0, 60);
+
+	// Scale factor: 0.1~2
+	m_sliderScaleFactor.SetRange(1, 20);
+
+	// Pre-filter cap: 1~63
+	m_sliderPreCap.SetRange(0, 31);
+
+	// Uniqueness ratio: 0~100 (usually 5-15)
+	m_sliderUniqeRatio.SetRange(0, 100);
+
+	// Speckle Window Size: 3X3~99X99
+	m_sliderSpeckleWinSize.SetRange(0, 49);
+
+	// Speckle Range: 0~50 (default: 4)
+	m_sliderSpeckleRange.SetRange(0, 50);
+
+	// disp12MaxDiff: -1~1 (default: -1)
+	m_sliderMaxDiff.SetRange(-1, 1);
+}
+
+void CStereoVisionStudioDlg::SetMatchDefaultPara()
+{
+	m_editBlockSize = 17;
+	m_sliderBlockSize.SetPos(6);
+	m_editMaxDisparity = 128;
+	m_sliderMaxDisparity.SetPos(8);
+	m_editMinDisparity = 0;
+	m_sliderMinDisparity.SetPos(0);
+	m_editTextThres = 10;
+	m_sliderTextThres.SetPos(10);
+	m_editScaleFactor = 1;
+	m_sliderScaleFactor.SetPos(10);
+	m_editPreCap = 31;
+	m_sliderPreCap.SetPos(15);
+	m_editUniqeRatio = 15;
+	m_sliderUniqeRatio.SetPos(15);
+	m_editSpeckeWinSize = 99;
+	m_sliderSpeckleWinSize.SetPos(49);
+	m_editSpeckleRange = 4;
+	m_sliderSpeckleRange.SetPos(4);
+	m_editMaxDiff = -1;
+	m_sliderMaxDiff.SetPos(-1);
+}
+
+void CStereoVisionStudioDlg::SetCalDefaultPara()
+{
+	m_editNx = 9;
+	m_editNy = 6;
+	m_editSquareSize = 26;
 }
 
 void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
@@ -524,9 +615,7 @@ void CStereoVisionStudioDlg::OnClickedCapImage()
 
 void CStereoVisionStudioDlg::OnClickedBtnDefaultCalPara()
 {
-	m_editNx = 9;
-	m_editNy = 6;
-	m_editSquareSize = 26;
+	SetCalDefaultPara();
 
 	UpdateData(FALSE);
 }
@@ -605,16 +694,7 @@ void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
 
 void CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch()
 {
-	m_editBlockSize = 17;
-	m_editMaxDisparity = 128;
-	m_editMinDisparity = 0;
-	m_editTextThres = 10;
-	m_editScaleFactor = 1;
-	m_editPreCap = 31;
-	m_editUniqeRatio = 15;
-	m_editSpeckeWinSize = 100;
-	m_editSpeckleRange = 32;
-	m_editMaxDiff = 1;
+	SetMatchDefaultPara();
 
 	UpdateData(FALSE);
 }
@@ -663,3 +743,78 @@ void CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal()
 	UpdateData(FALSE);
 }
 
+
+
+void CStereoVisionStudioDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	m_editBlockSize = m_sliderBlockSize.GetPos() * 2 + 5;
+	m_editMaxDisparity = m_sliderMaxDisparity.GetPos() * 16;
+	m_editMinDisparity = m_sliderMinDisparity.GetPos();
+	m_editTextThres = m_sliderTextThres.GetPos();
+	m_editScaleFactor = m_sliderScaleFactor.GetPos() / 10.;
+	m_editPreCap = m_sliderPreCap.GetPos() * 2 + 1;
+	m_editUniqeRatio = m_sliderUniqeRatio.GetPos();
+	if (m_sliderSpeckleWinSize.GetPos() != 0)
+	{
+		m_editSpeckeWinSize = m_sliderSpeckleWinSize.GetPos() * 2 + 1;
+	}
+	else
+	{
+		m_editSpeckeWinSize = 0;
+	}
+	m_editSpeckleRange = m_sliderSpeckleRange.GetPos();
+	m_editMaxDiff = m_sliderMaxDiff.GetPos();
+
+	UpdateData(FALSE);
+
+	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadBm()
+{
+	m_radMatchMethod = 0;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadSgbm()
+{
+	m_radMatchMethod = 1;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadHh()
+{
+	m_radMatchMethod = 2;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadVar()
+{
+	m_radMatchMethod = 3;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadCgbm3ways()
+{
+	m_radMatchMethod = 4;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadBouguet()
+{
+	m_radMethod = 0;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadHartley()
+{
+	m_radMethod = 1;
+	UpdateData(FALSE);
+}

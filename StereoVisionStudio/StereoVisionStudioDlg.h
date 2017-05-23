@@ -18,6 +18,7 @@
 #include "StereoCalib.h"
 #include "StereoMatch.h"
 #include "tinyxml.h" 
+#include "afxcmn.h"
 
 using namespace std;
 using namespace cv;
@@ -91,7 +92,14 @@ private:
 	// Initialize Statusbar
 	void InitStatusbar();
 
-	
+	// Initialize Sliders
+	void InitSliders();
+
+	// Set match paramaters default
+	void SetMatchDefaultPara();
+
+	// Set calibration paramaters default
+	void SetCalDefaultPara();
 
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
@@ -132,4 +140,22 @@ public:
 	long m_editUniqeRatio;
 	afx_msg void OnBnClickedBtnSelectPrjCal();
 	CStatusBar m_Statusbar;
+	CSliderCtrl m_sliderMaxDisparity;
+	CSliderCtrl m_sliderBlockSize;
+	CSliderCtrl m_sliderMaxDiff;
+	CSliderCtrl m_sliderMinDisparity;
+	CSliderCtrl m_sliderPreCap;
+	CSliderCtrl m_sliderScaleFactor;
+	CSliderCtrl m_sliderSpeckleRange;
+	CSliderCtrl m_sliderSpeckleWinSize;
+	CSliderCtrl m_sliderTextThres;
+	CSliderCtrl m_sliderUniqeRatio;
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnBnClickedRadBm();
+	afx_msg void OnBnClickedRadSgbm();
+	afx_msg void OnBnClickedRadHh();
+	afx_msg void OnBnClickedRadVar();
+	afx_msg void OnBnClickedRadCgbm3ways();
+	afx_msg void OnBnClickedRadBouguet();
+	afx_msg void OnBnClickedRadHartley();
 };
