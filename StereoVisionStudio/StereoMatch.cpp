@@ -81,12 +81,12 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 
 	if (leftImage.empty())
 	{
-		printf("Could not load left image file\n");
+		AfxMessageBox(_T("Could not load left image file!"));
 		return;
 	}
 	if (rightImage.empty())
 	{
-		printf("Could not load right image file\n");
+		AfxMessageBox(_T("Could not load right image file!"));
 		return;
 	}
 
@@ -113,7 +113,8 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 		FileStorage fs(intrinsicFilename, FileStorage::READ);
 		if (!fs.isOpened())
 		{
-			printf("Failed to open file %s\n", intrinsicFilename.c_str());
+			AfxMessageBox(_T("Failed to open file ") + para.intrinsicFilename);
+			//printf("Failed to open file %s\n", intrinsicFilename.c_str());
 			return;
 		}
 
@@ -130,7 +131,8 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 		fs.open(extrinsicFilename, FileStorage::READ);
 		if (!fs.isOpened())
 		{
-			printf("Failed to open file %s\n", extrinsicFilename.c_str());
+			AfxMessageBox(_T("Failed to open file ") + para.extrinsicFilename);
+			//printf("Failed to open file %s\n", extrinsicFilename.c_str());
 			return;
 		}
 
@@ -238,8 +240,14 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 	{
 		sgbm->compute(leftImage, rightImage, disp);
 	}	
+	// Get main windows and update statusbar
+	HWND hWnd;
+	hWnd = ::FindWindow(NULL, _T("StereoVisionStudio"));
+	CStereoVisionStudioDlg* pWnd = (CStereoVisionStudioDlg*)CStereoVisionStudioDlg::FromHandle(hWnd);
+
 	t = getTickCount() - t;
-	printf("Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	//printf("Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	pWnd->m_Statusbar.SetPaneText(0, "Time elapsed: %fms\n", t * 1000 / getTickFrequency());
 
 	//disp = dispp.colRange(numberOfDisparities, img1p.cols);
 	if (alg != STEREO_VAR)

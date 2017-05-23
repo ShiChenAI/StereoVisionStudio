@@ -6,7 +6,6 @@
 #include "StereoVisionStudio.h"
 #include "StereoVisionStudioDlg.h"
 #include "afxdialogex.h"
-#include "StereoMatch.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -120,8 +119,13 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_STOP_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnStopMatch)
 	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
 	ON_BN_CLICKED(IDC_BTN_DEFAULT_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch)
+	ON_BN_CLICKED(IDC_BTN_SELECT_PRJ_CAL, &CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal)
 END_MESSAGE_MAP()
 
+static UINT indicators[] =
+{
+	ID_SEPARATOR,
+};
 
 // CStereoVisionStudioDlg message handlers
 
@@ -212,6 +216,9 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_hDCRi = m_pDCRi->GetSafeHdc();
 	m_pwndRi->GetClientRect(&m_rectRi);
 
+	// Initialize Statusbar
+	InitStatusbar();
+
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -277,6 +284,18 @@ void CStereoVisionStudioDlg::ShowImage(Mat & frame, IplImage & image, HDC & hdc,
 	CvvImage cvvImage;
 	cvvImage.CopyOf(&image, 3);
 	cvvImage.DrawToHDC(hdc, &rect);
+}
+
+void CStereoVisionStudioDlg::InitStatusbar()
+{
+	m_Statusbar.Create(this);
+	m_Statusbar.SetIndicators(indicators, sizeof(indicators) / sizeof(UINT));
+	CRect rect;
+	GetWindowRect(rect);
+	//m_Statusbar.SetPaneInfo(0, ID_SEPARATOR, SBPS_STRETCH, rect.Width() / 4);
+	m_Statusbar.SetPaneInfo(0, ID_SEPARATOR, SBPS_STRETCH, rect.Width());
+	m_Statusbar.SetPaneText(0, "Ready.");
+	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 }
 
 void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
@@ -460,6 +479,17 @@ void CStereoVisionStudioDlg::OnClickedBtnCreatePrj()
 
 		m_imagelist.clear();
 
+		// Creat XML file
+		TiXmlDocument *writeDoc = new TiXmlDocument;
+		TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "UTF-8", "yes");
+		writeDoc->LinkEndChild(decl);
+		TiXmlElement *RootElement = new TiXmlElement("opencv_storage");
+		writeDoc->LinkEndChild(RootElement);
+		TiXmlElement *StuElement = new TiXmlElement("imagelist");
+		RootElement->LinkEndChild(StuElement);
+		CString xmlFileName = m_prjPath + "\\" + m_editPrjName + ".xml";
+		writeDoc->SaveFile(xmlFileName);
+		delete writeDoc;
 		UpdateData(FALSE);
 
 		return;
@@ -583,3 +613,48 @@ void CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch()
 
 	UpdateData(FALSE);
 }
+
+
+void CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal()
+{
+	// Select project path
+	char szPath[MAX_PATH];
+	CString str;
+
+	BROWSEINFO bi;
+	bi.hwndOwner = m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szPath;
+	bi.lpszTitle = "Please select project.";
+	bi.ulFlags = 0;
+	bi.lpfn = 0;
+	bi.lParam = 0;
+
+	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+	if (lp && SHGetPathFromIDList(lp, szPath))
+	{
+		str.Format("%s", szPath);
+		m_editPrjPath = str;
+		m_prjPath = str;
+	}
+	else
+	{
+		AfxMessageBox("Invalid path.");
+	}
+
+	// Get current images
+	CCommonUtility::GetFiles(m_prjPath, "*.png", m_imagelist);
+
+	// Get XML file
+	vector<CString> xmlFiles;
+	if (CCommonUtility::GetFiles(m_prjPath, "*.xml", xmlFiles))
+	{
+		m_editPrjName = CCommonUtility::GetFileName(xmlFiles[0], false);
+		m_prjPath = CCommonUtility::GetCurDirectory();
+		m_prjPath += (CString)"\\";
+		m_prjPath += m_editPrjName;
+	}
+	
+	UpdateData(FALSE);
+}
+

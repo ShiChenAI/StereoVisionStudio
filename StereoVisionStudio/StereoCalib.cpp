@@ -16,7 +16,7 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 
 	if (para.imagelist.size() % 2 != 0)
 	{
-		AfxMessageBox(_T("Error: the image list contains odd (non-even) number of elements\n"));
+		AfxMessageBox(_T("Error: the image list contains odd (non-even) number of elementsI"));
 		return;
 	}
 
@@ -105,11 +105,18 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 			j++;
 		}
 	}
-	AfxMessageBox(_T(" pairs have been successfully detected.\n"));
+
+	// Get main windows and update statusbar
+	HWND hWnd;
+	hWnd = ::FindWindow(NULL, _T("StereoVisionStudio"));
+	CStereoVisionStudioDlg* pWnd = (CStereoVisionStudioDlg*)CStereoVisionStudioDlg::FromHandle(hWnd);
+	pWnd->m_Statusbar.SetPaneText(0, " pairs have been successfully detected.");
+
+	//AfxMessageBox(_T(" pairs have been successfully detected.\n"));
 	nimages = j;
 	if (nimages < 2)
 	{
-		AfxMessageBox(_T("Error: too little pairs to run the calibration\n"));
+		AfxMessageBox(_T("Error: too little pairs to run the calibration"));
 		return;
 	}
 
@@ -128,7 +135,8 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 		}
 	}
 
-	AfxMessageBox(_T("Running stereo calibration ...\n"));
+	pWnd->m_Statusbar.SetPaneText(0, "Running stereo calibration ...");
+	//AfxMessageBox(_T("Running stereo calibration ...\n"));
 
 	Mat cameraMatrix[2], distCoeffs[2];
 	cameraMatrix[0] = initCameraMatrix2D(objectPoints, imagePoints[0], imageSize, 0);
@@ -146,7 +154,8 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 		CALIB_RATIONAL_MODEL +
 		CALIB_FIX_K3 + CALIB_FIX_K4 + CALIB_FIX_K5,
 		TermCriteria(TermCriteria::COUNT + TermCriteria::EPS, 100, 1e-5));
-	AfxMessageBox(_T("done with RMS error=") + CConvertUtility::ToString(rms));
+	pWnd->m_Statusbar.SetPaneText(0, "done with RMS error=" + CConvertUtility::ToString(rms));
+	//AfxMessageBox(_T("done with RMS error=") + CConvertUtility::ToString(rms));
 	// cout << "done with RMS error=" << rms << endl;
 
 	// CALIBRATION QUALITY CHECK
@@ -177,7 +186,8 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 		}
 		npoints += npt;
 	}
-	AfxMessageBox(_T("average epipolar err = ") + CConvertUtility::ToString(err / npoints));
+	pWnd->m_Statusbar.SetPaneText(0, "average epipolar err = " + CConvertUtility::ToString(err / npoints));
+	//AfxMessageBox(_T("average epipolar err = ") + CConvertUtility::ToString(err / npoints));
 	// cout << "average epipolar err = " << err / npoints << endl;
 
 	// save intrinsic parameters
@@ -190,7 +200,10 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 			"M2" << cameraMatrix[1] << "D2" << distCoeffs[1];
 		fs.release();
 	}
-	else AfxMessageBox(_T("Error: can not save the intrinsic parameters\n"));
+	else
+	{
+		AfxMessageBox(_T("Error: can not save the intrinsic parametersI"));
+	}
 
 	Mat R1, R2, P1, P2, Q;
 	Rect validRoi[2];
@@ -208,7 +221,10 @@ void CStereoCalib::Calibration(CStereoCalibPara para)
 		fs << "R" << R << "T" << T << "R1" << R1 << "R2" << R2 << "P1" << P1 << "P2" << P2 << "Q" << Q;
 		fs.release();
 	}
-	else AfxMessageBox(_T("Error: can not save the extrinsic parameters\n"));
+	else
+	{
+		AfxMessageBox(_T("Error: can not save the extrinsic parametersI"));
+	}
 
 	// OpenCV can handle left-right
 	// or up-down camera arrangements
