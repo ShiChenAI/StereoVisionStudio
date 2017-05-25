@@ -71,6 +71,17 @@ CStereoVisionStudioDlg::CStereoVisionStudioDlg(CWnd* pParent /*=NULL*/)
 	, m_editSpeckeWinSize(0)
 	, m_editTextThres(0)
 	, m_editUniqeRatio(0)
+	, m_imageSource(0)
+	, m_staticBlockSize(_T(""))
+	, m_staticMaxDiff(_T(""))
+	, m_staticMaxDisparity(_T(""))
+	, m_staticMinDisparity(_T(""))
+	, m_staticPreCap(_T(""))
+	, m_staticScale(_T(""))
+	, m_staticSpeckleRange(_T(""))
+	, m_staticSpeckleWinSize(_T(""))
+	, m_staticTextThrs(_T(""))
+	, m_staticUniqRatio(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -100,6 +111,28 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SPECKLE_WIN_SIZE, m_editSpeckeWinSize);
 	DDX_Text(pDX, IDC_EDIT_TEXT_THRES, m_editTextThres);
 	DDX_Text(pDX, IDC_EDIT_UNIQE_RATIO, m_editUniqeRatio);
+	DDX_Control(pDX, IDC_SLIDE_MAX_DISPARITY, m_sliderMaxDisparity);
+	DDX_Control(pDX, IDC_SLIDER_BLOCK_SIZE, m_sliderBlockSize);
+	DDX_Control(pDX, IDC_SLIDER_MAX_DIFF, m_sliderMaxDiff);
+	DDX_Control(pDX, IDC_SLIDER_MIN_DISPARITY, m_sliderMinDisparity);
+	DDX_Control(pDX, IDC_SLIDER_PRE_CAP, m_sliderPreCap);
+	DDX_Control(pDX, IDC_SLIDER_SCALE_FACTOR, m_sliderScaleFactor);
+	DDX_Control(pDX, IDC_SLIDER_SPECKLE_RANGE, m_sliderSpeckleRange);
+	DDX_Control(pDX, IDC_SLIDER_SPECKLE_WIN_SIZE, m_sliderSpeckleWinSize);
+	DDX_Control(pDX, IDC_SLIDER_TEXT_THRES, m_sliderTextThres);
+	DDX_Control(pDX, IDC_SLIDER_UNIQE_RATIO, m_sliderUniqeRatio);
+	DDX_Radio(pDX, IDC_RAD_FROM_CAMERA, m_imageSource);
+	DDX_Text(pDX, IDC_STATIC_BLOCK_SIZE, m_staticBlockSize);
+	DDX_Text(pDX, IDC_STATIC_MAX_DIFF, m_staticMaxDiff);
+	DDX_Text(pDX, IDC_STATIC_MAX_DISPARITY, m_staticMaxDisparity);
+	DDX_Text(pDX, IDC_STATIC_MIN_DISPARITY, m_staticMinDisparity);
+	DDX_Text(pDX, IDC_STATIC_PRE_CAP, m_staticPreCap);
+	DDX_Text(pDX, IDC_STATIC_SCALE, m_staticScale);
+	DDX_Text(pDX, IDC_STATIC_SPECKLE_RANGE, m_staticSpeckleRange);
+	DDX_Text(pDX, IDC_STATIC_SPECKLE_WIN_SIZE, m_staticSpeckleWinSize);
+	DDX_Text(pDX, IDC_STATIC_TEXT_THRS, m_staticTextThrs);
+	DDX_Text(pDX, IDC_STATIC_UNIQ_RATIO, m_staticUniqRatio);
+	DDX_Control(pDX, IDC_CBO_CAMERA_RESOLUTION, m_cboCameraResolution);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -120,6 +153,17 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SELECT_PRJ, &CStereoVisionStudioDlg::OnBnClickedSelectPrj)
 	ON_BN_CLICKED(IDC_BTN_DEFAULT_MATCH, &CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch)
 	ON_BN_CLICKED(IDC_BTN_SELECT_PRJ_CAL, &CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal)
+	ON_WM_HSCROLL()
+	ON_BN_CLICKED(IDC_RAD_BM, &CStereoVisionStudioDlg::OnBnClickedRadBm)
+	ON_BN_CLICKED(IDC_RAD_SGBM, &CStereoVisionStudioDlg::OnBnClickedRadSgbm)
+	ON_BN_CLICKED(IDC_RAD_HH, &CStereoVisionStudioDlg::OnBnClickedRadHh)
+	ON_BN_CLICKED(IDC_RAD_VAR, &CStereoVisionStudioDlg::OnBnClickedRadVar)
+	ON_BN_CLICKED(IDC_RAD_CGBM3WAYS, &CStereoVisionStudioDlg::OnBnClickedRadCgbm3ways)
+	ON_BN_CLICKED(IDC_RAD_BOUGUET, &CStereoVisionStudioDlg::OnBnClickedRadBouguet)
+	ON_BN_CLICKED(IDC_RAD_HARTLEY, &CStereoVisionStudioDlg::OnBnClickedRadHartley)
+	ON_BN_CLICKED(IDC_RAD_FROM_CAMERA, &CStereoVisionStudioDlg::OnBnClickedRadFromCamera)
+	ON_BN_CLICKED(IDC_RAD_FROM_IMAGE, &CStereoVisionStudioDlg::OnBnClickedRadFromImage)
+	ON_CBN_SELCHANGE(IDC_CBO_CAMERA_RESOLUTION, &CStereoVisionStudioDlg::OnCbnSelchangeCboCameraResolution)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -167,28 +211,8 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 		AfxMessageBox(_T("Please insert at least 2 cameras£¡"));
 	}
 
-	// Fill camera list
-	char camName[1024];
-	char istr[1024];
-	CString strCamName;
-	for (int i = 0; i < m_cameraCount; i++)
-	{
-		int retval = CVideoUtility::GetCameraName(i, camName, sizeof(camName));
-
-		sprintf_s(istr, "#%d ", i);
-		strcat_s(istr, camName);
-		strCamName = istr;
-		if (retval >0)
-		{
-			m_cboCamLeft.AddString(strCamName);
-			m_cboCamRight.AddString(strCamName);
-		}
-		else
-		{
-			AfxMessageBox(_T("Failed to get camera name!"));
-		}
-	}
-	strCamName.ReleaseBuffer();
+	// Initializing combobox
+	InitCombobox();
 
 	// Disable button
 	GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(FALSE);
@@ -205,6 +229,12 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_chcShowCal = true;
 	m_chcShowCorner = true;
 
+	// Defaults to using BM method for match
+	m_radMatchMethod = 0;
+
+	// Defaults to using camera as image source
+	m_imageSource = 0;
+
 	// Camera view windows parameters initiating
 	m_pwndLf = GetDlgItem(IDC_PIC_LEFT_CAM);
 	m_pDCLf = m_pwndLf->GetDC();
@@ -215,9 +245,24 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	m_pDCRi = m_pwndRi->GetDC();
 	m_hDCRi = m_pDCRi->GetSafeHdc();
 	m_pwndRi->GetClientRect(&m_rectRi);
+	
+	m_pwndDs = GetDlgItem(IDC_PIC_DISPARITY_CAM);
+	m_pDCDs = m_pwndDs->GetDC();
+	m_hDCDs = m_pDCDs->GetSafeHdc();
+	m_pwndDs->GetClientRect(&m_rectDs);
+
+	// Initialize Slider
+	InitSliders();
 
 	// Initialize Statusbar
 	InitStatusbar();
+
+	// Set default parameters
+	SetMatchDefaultPara();
+	SetCalDefaultPara();
+
+	// Start timer
+	SetTimer(1, 50, NULL);
 
 	UpdateData(FALSE);
 
@@ -286,6 +331,37 @@ void CStereoVisionStudioDlg::ShowImage(Mat & frame, IplImage & image, HDC & hdc,
 	cvvImage.DrawToHDC(hdc, &rect);
 }
 
+void CStereoVisionStudioDlg::InitCombobox()
+{
+	// Get cameras list
+	char camName[1024];
+	char istr[1024];
+	CString strCamName;
+	for (int i = 0; i < m_cameraCount; i++)
+	{
+		int retval = CVideoUtility::GetCameraName(i, camName, sizeof(camName));
+
+		sprintf_s(istr, "#%d ", i);
+		strcat_s(istr, camName);
+		strCamName = istr;
+		if (retval >0)
+		{
+			m_cboCamLeft.AddString(strCamName);
+			m_cboCamRight.AddString(strCamName);
+		}
+		else
+		{
+			AfxMessageBox(_T("Failed to get camera name!"));
+		}
+	}
+	strCamName.ReleaseBuffer();
+
+	// Set resolution list: 320 * 240;352 * 288;640 * 480;
+	m_cboCameraResolution.AddString(TEXT("320 * 240"));
+	m_cboCameraResolution.AddString(TEXT("352 * 288"));
+	m_cboCameraResolution.AddString(TEXT("640 * 480"));
+}
+
 void CStereoVisionStudioDlg::InitStatusbar()
 {
 	m_Statusbar.Create(this);
@@ -298,24 +374,258 @@ void CStereoVisionStudioDlg::InitStatusbar()
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 }
 
+void CStereoVisionStudioDlg::InitSliders()
+{
+	// BlockSize: 
+	// BM: 5X5~255X255 (usually 5X5~21X21)
+	// SGBM: 1X1~11X11 (usually 3X3~11X11)
+	m_sliderBlockSize.SetRange(2, 127);
+
+	// Max disparity: 16~256
+	m_sliderMaxDisparity.SetRange(1, 16);
+
+	// Min disparity: -64~64 (default: 0)
+	m_sliderMinDisparity.SetRange(-64, 64);
+
+	// Texture threshold: 0~60
+	m_sliderTextThres.SetRange(0, 60);
+
+	// Scale factor: 0.1~2
+	m_sliderScaleFactor.SetRange(1, 20);
+
+	// Pre-filter cap: 1~63
+	m_sliderPreCap.SetRange(0, 31);
+
+	// Uniqueness ratio: 0~100 (usually 5-15)
+	m_sliderUniqeRatio.SetRange(0, 100);
+
+	// Speckle Window Size: 3X3~99X99
+	m_sliderSpeckleWinSize.SetRange(0, 49);
+
+	// Speckle Range: 0~50 (default: 4)
+	m_sliderSpeckleRange.SetRange(0, 50);
+
+	// disp12MaxDiff: -1~1 (default: -1)
+	m_sliderMaxDiff.SetRange(-1, 1);
+}
+
+void CStereoVisionStudioDlg::SetMatchDefaultPara()
+{
+	if (m_radMatchMethod == 0)
+	{
+		m_staticBlockSize = TEXT("(usually 5X5~21X21, default: 17X17)");
+		m_editBlockSize = 17;
+		m_sliderBlockSize.SetPos(8);
+
+		m_staticMaxDisparity = TEXT("(default: 128)");
+		m_editMaxDisparity = 128;
+		m_sliderMaxDisparity.SetPos(8);
+
+		m_staticMinDisparity = TEXT("(default: 0)");
+		m_editMinDisparity = 0;
+		m_sliderMinDisparity.SetPos(0);
+
+		m_staticTextThrs = TEXT("(default: 10)");
+		m_editTextThres = 10;
+		m_sliderTextThres.SetPos(10);
+
+		m_staticScale = TEXT("(default: 1)");
+		m_editScaleFactor = 1;
+		m_sliderScaleFactor.SetPos(10);
+
+		m_staticPreCap = TEXT("(default: 31)");
+		m_editPreCap = 31;
+		m_sliderPreCap.SetPos(15);
+
+		m_staticUniqRatio = TEXT("(usually 5~15, default: 15)");
+		m_editUniqeRatio = 15;
+		m_sliderUniqeRatio.SetPos(15);
+
+		m_staticSpeckleWinSize = TEXT("(default: 99)");
+		m_editSpeckeWinSize = 99;
+		m_sliderSpeckleWinSize.SetPos(49);
+
+		m_staticSpeckleRange = TEXT("(default: 4)");
+		m_editSpeckleRange = 4;
+		m_sliderSpeckleRange.SetPos(4);
+
+		m_staticMaxDiff = TEXT("(default: -1)");
+		m_editMaxDiff = -1;
+		m_sliderMaxDiff.SetPos(-1);
+	}
+	else if (m_radMatchMethod == 1 || m_radMatchMethod == 2 || m_radMatchMethod == 4)
+	{
+		m_staticBlockSize = TEXT("(usually 3X3~11X11, default: 7X7)");
+		m_editBlockSize = 7;
+		m_sliderBlockSize.SetPos(3);
+
+		m_staticMaxDisparity = TEXT("(default: 128)");
+		m_editMaxDisparity = 128;
+		m_sliderMaxDisparity.SetPos(8);
+
+		m_staticMinDisparity = TEXT("(default: 0)");
+		m_editMinDisparity = 0;
+		m_sliderMinDisparity.SetPos(0);
+
+		m_staticTextThrs = TEXT("(default: 10)");
+		m_editTextThres = 10;
+		m_sliderTextThres.SetPos(10);
+
+		m_staticScale = TEXT("(default: 1)");
+		m_editScaleFactor = 1;
+		m_sliderScaleFactor.SetPos(10);
+
+		m_staticPreCap = TEXT("(default: 63)");
+		m_editPreCap = 63;
+		m_sliderPreCap.SetPos(31);
+
+		m_staticUniqRatio = TEXT("(usually 5~15, default: 15)");
+		m_editUniqeRatio = 10;
+		m_sliderUniqeRatio.SetPos(10);
+
+		m_staticSpeckleWinSize = TEXT("(default: 99)");
+		m_editSpeckeWinSize = 99;
+		m_sliderSpeckleWinSize.SetPos(49);
+
+		m_staticSpeckleRange = TEXT("(default: 4)");
+		m_editSpeckleRange = 4;
+		m_sliderSpeckleRange.SetPos(4);
+
+		m_staticMaxDiff = TEXT("(default: -1)");
+		m_editMaxDiff = -1;
+		m_sliderMaxDiff.SetPos(-1);
+	}
+	else if (m_radMatchMethod == 3)
+	{
+		m_staticBlockSize = TEXT("(usually 3X3~11X11, default: 7X7)");
+		m_editBlockSize = 7;
+		m_sliderBlockSize.SetPos(3);
+
+		m_staticMaxDisparity = TEXT("(default: 128)");
+		m_editMaxDisparity = 128;
+		m_sliderMaxDisparity.SetPos(8);
+
+		m_staticMinDisparity = TEXT("(default: -64)");
+		m_editMinDisparity = -64;
+		m_sliderMinDisparity.SetPos(-64);
+
+		m_staticTextThrs = TEXT("(default: 10)");
+		m_editTextThres = 10;
+		m_sliderTextThres.SetPos(10);
+
+		m_staticScale = TEXT("(default: 1)");
+		m_editScaleFactor = 1;
+		m_sliderScaleFactor.SetPos(10);
+
+		m_staticPreCap = TEXT("(default: 63)");
+		m_editPreCap = 63;
+		m_sliderPreCap.SetPos(31);
+
+		m_staticUniqRatio = TEXT("(usually 5~15, default: 15)");
+		m_editUniqeRatio = 10;
+		m_sliderUniqeRatio.SetPos(10);
+
+		m_staticSpeckleWinSize = TEXT("(default: 99)");
+		m_editSpeckeWinSize = 99;
+		m_sliderSpeckleWinSize.SetPos(49);
+
+		m_staticSpeckleRange = TEXT("(default: 4)");
+		m_editSpeckleRange = 4;
+		m_sliderSpeckleRange.SetPos(4);
+
+		m_staticMaxDiff = TEXT("(default: -1)");
+		m_editMaxDiff = -1;
+		m_sliderMaxDiff.SetPos(-1);
+	}
+}
+
+void CStereoVisionStudioDlg::SetCalDefaultPara()
+{
+	m_editNx = 9;
+	m_editNy = 6;
+	m_editSquareSize = 26;
+}
+
+void CStereoVisionStudioDlg::ReadCalPara()
+{
+	string intrinsicFilename = m_prjPath + "\\intrinsics.yml";
+	string extrinsicFilename = m_prjPath + "\\extrinsics.yml";
+
+	if (!intrinsicFilename.empty())
+	{
+		// Reading intrinsic parameters
+		FileStorage fs(intrinsicFilename, FileStorage::READ);
+		if (!fs.isOpened())
+		{
+			AfxMessageBox(TEXT("Failed to open intrinsic file!"));
+			//printf("Failed to open file %s\n", intrinsicFilename.c_str());
+			return;
+		}
+		fs["M1"] >> m_M1;
+		fs["D1"] >> m_D1;
+		fs["M2"] >> m_M2;
+		fs["D2"] >> m_D2;
+
+		// Reading extrinsic parameters
+		fs.open(extrinsicFilename, FileStorage::READ);
+		if (!fs.isOpened())
+		{
+			AfxMessageBox(_T("Failed to open extrinsics file!"));
+			return;
+		}
+		fs["R"] >> m_R;
+		fs["T"] >> m_T;
+	}
+}
+
 void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if (m_lfCam.isOpened())
+	if (m_imageSource == 0)
 	{
-		// Capture frame from camera
-		m_lfCam >> m_lfImage;
+		if (m_lfCam.isOpened())
+		{
+			// Capture frame from camera
+			m_lfCam >> m_lfImage;
 
-		// Draw image to HDC
-		ShowImage(m_lfImage, m_copyLfImage, m_hDCLf, m_rectLf);
+			// Draw image to HDC
+			ShowImage(m_lfImage, m_copyLfImage, m_hDCLf, m_rectLf);
+		}
+
+		if (m_riCam.isOpened())
+		{
+			// Capture frame from camera
+			m_riCam >> m_riImage;
+
+			// Draw image to HDC
+			ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+		}
 	}
-
-	if (m_riCam.isOpened())
+	else if (m_imageSource == 1)
 	{
-		// Capture frame from camera
-		m_riCam >> m_riImage;
+		string leftImagePath = m_prjPath + "\\left.png";
+		string rightImagePath = m_prjPath + "\\right.png";
 
-		// Draw image to HDC
-		ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+		m_lfImage = imread(leftImagePath);
+		if (m_lfImage.empty())
+		{
+			m_Statusbar.SetPaneText(0, TEXT("Load left image failed!"));
+		}
+		else
+		{
+			// Draw image to HDC
+			ShowImage(m_lfImage, m_copyLfImage, m_hDCLf, m_rectLf);
+		}
+
+		m_riImage = imread(rightImagePath);
+		if (m_riImage.empty())
+		{
+			m_Statusbar.SetPaneText(0, TEXT("Load right image failed!"));
+		}
+		else
+		{
+			// Draw image to HDC
+			ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+		}
 	}
 
 	// streo match calculation
@@ -337,8 +647,14 @@ void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 		matchPara.speckleWindowSize = m_editSpeckeWinSize;
 		matchPara.textureThreshold = m_editTextThres;
 		matchPara.uniquenessRatio = m_editUniqeRatio;
-		matchPara.intrinsicFilename = m_prjPath + "\\intrinsics.yml";
-		matchPara.extrinsicFilename = m_prjPath + "\\extrinsics.yml";
+		matchPara.M1 = m_M1;
+		matchPara.M2 = m_M2;
+		matchPara.D1 = m_D1;
+		matchPara.D2 = m_D2;
+		matchPara.R = m_R;
+		matchPara.T = m_T;
+		//matchPara.intrinsicFilename = m_prjPath + "\\intrinsics.yml";
+		//matchPara.extrinsicFilename = m_prjPath + "\\extrinsics.yml";
 
 		CStereoMatch cal;
 		cal.Calculation(matchPara, m_dsImage);
@@ -355,7 +671,7 @@ void CStereoVisionStudioDlg::OnSelchangeCboCamLeft()
 	m_lfCamID = m_cboCamLeft.GetCurSel();
 
 	// Enable open camera button
-	if (m_lfCamID >= 0 && m_riCamID >= 0)
+	if (m_lfCamID >= 0 && m_riCamID >= 0 && m_resolution >= 0)
 	{
 		GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(TRUE);
 	}
@@ -370,7 +686,7 @@ void CStereoVisionStudioDlg::OnSelchangeCboCamRight()
 	m_riCamID = m_cboCamRight.GetCurSel();
 
 	// Enable open camera button
-	if (m_lfCamID >= 0 && m_riCamID >= 0)
+	if (m_lfCamID >= 0 && m_riCamID >= 0 && m_resolution >= 0)
 	{
 		GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(TRUE);
 	}
@@ -383,19 +699,29 @@ void CStereoVisionStudioDlg::OnClickedBtnOpencam()
 {
 	if (m_cameraCount > 1)
 	{
+		if (m_lfCamID == m_riCamID)
+		{
+			AfxMessageBox(TEXT("Left camera and right camera can't be the same!"));
+			return;
+		}
+
 		// Open left camera
 		if (!m_lfCam.open(m_lfCamID))
 		{
-			AfxMessageBox(_T("Open left camera failed!"));
+			AfxMessageBox(TEXT("Open left camera failed!"));
 			return;
 		}
+		m_lfCam.set(CV_CAP_PROP_FRAME_WIDTH, m_frameWidth);
+		m_lfCam.set(CV_CAP_PROP_FRAME_HEIGHT, m_frameHeight);
 
 		// Open right camera
 		if (!m_riCam.open(m_riCamID))
 		{
-			AfxMessageBox(_T("Open right camera failed!"));
+			AfxMessageBox(TEXT("Open right camera failed!"));
 			return;
 		}
+		m_riCam.set(CV_CAP_PROP_FRAME_WIDTH, m_frameWidth);
+		m_riCam.set(CV_CAP_PROP_FRAME_HEIGHT, m_frameHeight);
 
 		// Enable & Disable some buttons
 		GetDlgItem(IDC_BTN_CLOSECAM)->EnableWindow(TRUE);
@@ -405,9 +731,10 @@ void CStereoVisionStudioDlg::OnClickedBtnOpencam()
 		GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(FALSE);
 		GetDlgItem(IDC_CBO_CAM_LEFT)->EnableWindow(FALSE);
 		GetDlgItem(IDC_CBO_CAM_RIGHT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CBO_CAMERA_RESOLUTION)->EnableWindow(FALSE);
 
 		// Start timer
-		SetTimer(1, 1, NULL);
+		SetTimer(1, 50, NULL);
 	}
 
 	return;
@@ -441,6 +768,7 @@ void CStereoVisionStudioDlg::OnClickedBtnClosecam()
 		GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(TRUE);
 		GetDlgItem(IDC_CBO_CAM_LEFT)->EnableWindow(TRUE);
 		GetDlgItem(IDC_CBO_CAM_RIGHT)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CBO_CAMERA_RESOLUTION)->EnableWindow(TRUE);
 		GetDlgItem(IDC_EDIT_PRJ_NAME)->EnableWindow(FALSE);
 		GetDlgItem(IDC_BTN_CREATE_PRJ)->EnableWindow(FALSE);
 		GetDlgItem(IDC_CAP_IMAGE)->EnableWindow(FALSE);
@@ -476,7 +804,7 @@ void CStereoVisionStudioDlg::OnClickedBtnCreatePrj()
 
 		// Reset sample count
 		m_editSapCount = 0;
-
+		
 		m_imagelist.clear();
 
 		// Creat XML file
@@ -519,9 +847,7 @@ void CStereoVisionStudioDlg::OnClickedCapImage()
 
 void CStereoVisionStudioDlg::OnClickedBtnDefaultCalPara()
 {
-	m_editNx = 9;
-	m_editNy = 6;
-	m_editSquareSize = 26;
+	SetCalDefaultPara();
 
 	UpdateData(FALSE);
 }
@@ -589,6 +915,10 @@ void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
 		str.Format("%s", szPath);
 		m_editPrjPath = str;
 		m_prjPath = str;
+
+		// Reading calibration parameters
+		ReadCalPara();
+
 		UpdateData(FALSE);
 	}
 	else 
@@ -600,16 +930,7 @@ void CStereoVisionStudioDlg::OnBnClickedSelectPrj()
 
 void CStereoVisionStudioDlg::OnBnClickedBtnDefaultMatch()
 {
-	m_editBlockSize = 17;
-	m_editMaxDisparity = 128;
-	m_editMinDisparity = 0;
-	m_editTextThres = 10;
-	m_editScaleFactor = 1;
-	m_editPreCap = 31;
-	m_editUniqeRatio = 15;
-	m_editSpeckeWinSize = 100;
-	m_editSpeckleRange = 32;
-	m_editMaxDiff = 1;
+	SetMatchDefaultPara();
 
 	UpdateData(FALSE);
 }
@@ -658,3 +979,136 @@ void CStereoVisionStudioDlg::OnBnClickedBtnSelectPrjCal()
 	UpdateData(FALSE);
 }
 
+
+
+void CStereoVisionStudioDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	m_editBlockSize = m_sliderBlockSize.GetPos() * 2 + 1;
+	m_editMaxDisparity = m_sliderMaxDisparity.GetPos() * 16;
+	m_editMinDisparity = m_sliderMinDisparity.GetPos();
+	m_editTextThres = m_sliderTextThres.GetPos();
+	m_editScaleFactor = m_sliderScaleFactor.GetPos() / 10.;
+	m_editPreCap = m_sliderPreCap.GetPos() * 2 + 1;
+	m_editUniqeRatio = m_sliderUniqeRatio.GetPos();
+	if (m_sliderSpeckleWinSize.GetPos() != 0)
+	{
+		m_editSpeckeWinSize = m_sliderSpeckleWinSize.GetPos() * 2 + 1;
+	}
+	else
+	{
+		m_editSpeckeWinSize = 0;
+	}
+	m_editSpeckleRange = m_sliderSpeckleRange.GetPos();
+	m_editMaxDiff = m_sliderMaxDiff.GetPos();
+
+	UpdateData(FALSE);
+
+	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadBm()
+{
+	m_radMatchMethod = 0;
+	m_sliderBlockSize.SetRange(2, 127);
+	SetMatchDefaultPara();
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadSgbm()
+{
+	m_radMatchMethod = 1;
+	m_sliderBlockSize.SetRange(0, 5);
+	SetMatchDefaultPara();
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadHh()
+{
+	m_radMatchMethod = 2;
+	m_sliderBlockSize.SetRange(0, 5);
+	SetMatchDefaultPara();
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadVar()
+{
+	m_radMatchMethod = 3;
+	m_sliderBlockSize.SetRange(0, 5);
+	SetMatchDefaultPara();
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadCgbm3ways()
+{
+	m_radMatchMethod = 4;
+	m_sliderBlockSize.SetRange(0, 5);
+	SetMatchDefaultPara();
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadBouguet()
+{
+	m_radMethod = 0;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadHartley()
+{
+	m_radMethod = 1;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadFromCamera()
+{
+	m_imageSource = 0;
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedRadFromImage()
+{
+	m_imageSource = 1;
+
+	UpdateData(FALSE);
+}
+
+
+void CStereoVisionStudioDlg::OnCbnSelchangeCboCameraResolution()
+{
+	// Get left camera ID
+	int m_resolution = m_cboCameraResolution.GetCurSel();
+	switch (m_resolution)
+	{
+		case 0:
+			m_frameWidth = 320;
+			m_frameHeight = 240;
+			break;
+		case 1:
+			m_frameWidth = 352;
+			m_frameHeight = 288;
+			break;
+		case 2:
+			m_frameWidth = 640;
+			m_frameHeight = 480;
+			break;
+		default:
+			m_frameWidth = 352;
+			m_frameHeight = 288;
+	}
+
+	// Enable open camera button
+	if (m_lfCamID >= 0 && m_riCamID >= 0 && m_resolution >= 0)
+	{
+		GetDlgItem(IDC_BTN_OPENCAM)->EnableWindow(TRUE);
+	}
+
+	return;
+}

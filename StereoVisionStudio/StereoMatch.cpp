@@ -21,6 +21,14 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 	Ptr<StereoBM> bm = StereoBM::create(16, 9);
 	Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
 
+	// Calibration parameters
+	Mat M1 = para.M1; 
+	Mat M2 = para.M2;
+	Mat D1 = para.D1;
+	Mat D2 = para.D2;
+	Mat R = para.R;
+	Mat T = para.T;
+
 	// Algorithm parameters
 	int SADWindowSize;										/* Defines the size of both the support window in the left image and the correlation
 															   window in the right image.Window sizes are odd numbers like 9x9, 21x21, 41x41, etc.
@@ -52,8 +60,8 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 	int disp12MaxDiff;
 
 	// Read parameters
-	string intrinsicFilename = para.intrinsicFilename.GetBuffer(0);
-	string extrinsicFilename = para.extrinsicFilename.GetBuffer(0);
+	//string intrinsicFilename = para.intrinsicFilename.GetBuffer(0);
+	//string extrinsicFilename = para.extrinsicFilename.GetBuffer(0);
 	numberOfDisparities = para.maxDisparity;	
 	SADWindowSize = para.blockSize;				
 	scale = para.scaleFactor;
@@ -106,53 +114,71 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 	Rect roi1, roi2;
 	Mat Q;
 
+	// Calibration
+	M1 *= scale;
+	M2 *= scale;
+
+	Mat R1, P1, R2, P2;
+	stereoRectify(M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, img_size, &roi1, &roi2);
+
+	Mat map11, map12, map21, map22;
+	initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
+	initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
+
+	Mat img1r, img2r;
+	remap(leftImage, img1r, map11, map12, INTER_LINEAR);
+	remap(rightImage, img2r, map21, map22, INTER_LINEAR);
+
+	leftImage = img1r;
+	rightImage = img2r;
+
 	// Reading calibration files
-	if (!intrinsicFilename.empty())
-	{
-		// Reading intrinsic parameters
-		FileStorage fs(intrinsicFilename, FileStorage::READ);
-		if (!fs.isOpened())
-		{
-			AfxMessageBox(_T("Failed to open file ") + para.intrinsicFilename);
-			//printf("Failed to open file %s\n", intrinsicFilename.c_str());
-			return;
-		}
+	//if (!intrinsicFilename.empty())
+	//{
+	//	// Reading intrinsic parameters
+	//	FileStorage fs(intrinsicFilename, FileStorage::READ);
+	//	if (!fs.isOpened())
+	//	{
+	//		AfxMessageBox(_T("Failed to open file ") + para.intrinsicFilename);
+	//		//printf("Failed to open file %s\n", intrinsicFilename.c_str());
+	//		return;
+	//	}
 
-		Mat M1, D1, M2, D2;
-		fs["M1"] >> M1;
-		fs["D1"] >> D1;
-		fs["M2"] >> M2;
-		fs["D2"] >> D2;
+	//	Mat M1, D1, M2, D2;
+	//	fs["M1"] >> M1;
+	//	fs["D1"] >> D1;
+	//	fs["M2"] >> M2;
+	//	fs["D2"] >> D2;
 
-		M1 *= scale;
-		M2 *= scale;
+	//	M1 *= scale;
+	//	M2 *= scale;
 
-		// Reading extrinsic parameters
-		fs.open(extrinsicFilename, FileStorage::READ);
-		if (!fs.isOpened())
-		{
-			AfxMessageBox(_T("Failed to open file ") + para.extrinsicFilename);
-			//printf("Failed to open file %s\n", extrinsicFilename.c_str());
-			return;
-		}
+	//	// Reading extrinsic parameters
+	//	fs.open(extrinsicFilename, FileStorage::READ);
+	//	if (!fs.isOpened())
+	//	{
+	//		AfxMessageBox(_T("Failed to open file ") + para.extrinsicFilename);
+	//		//printf("Failed to open file %s\n", extrinsicFilename.c_str());
+	//		return;
+	//	}
 
-		Mat R, T, R1, P1, R2, P2;
-		fs["R"] >> R;
-		fs["T"] >> T;
+	//	Mat R, T, R1, P1, R2, P2;
+	//	fs["R"] >> R;
+	//	fs["T"] >> T;
 
-		stereoRectify(M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, img_size, &roi1, &roi2);
+	//	stereoRectify(M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, img_size, &roi1, &roi2);
 
-		Mat map11, map12, map21, map22;
-		initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
-		initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
+	//	Mat map11, map12, map21, map22;
+	//	initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
+	//	initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
 
-		Mat img1r, img2r;
-		remap(leftImage, img1r, map11, map12, INTER_LINEAR);
-		remap(rightImage, img2r, map21, map22, INTER_LINEAR);
+	//	Mat img1r, img2r;
+	//	remap(leftImage, img1r, map11, map12, INTER_LINEAR);
+	//	remap(rightImage, img2r, map21, map22, INTER_LINEAR);
 
-		leftImage = img1r;
-		rightImage = img2r;
-	}
+	//	leftImage = img1r;
+	//	rightImage = img2r;
+	//}
 
 	numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((img_size.width / 8) + 15) & -16;
 
@@ -247,7 +273,10 @@ void CStereoMatch::Calculation(CStereoMatchPara para, Mat &result)
 
 	t = getTickCount() - t;
 	//printf("Time elapsed: %fms\n", t * 1000 / getTickFrequency());
-	pWnd->m_Statusbar.SetPaneText(0, "Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	CString strElapsedTime;
+	strElapsedTime.Format(TEXT("Time elapsed: %fFPS"), getTickFrequency() / t);
+	//pWnd->m_Statusbar.SetPaneText(0, "Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+	pWnd->m_Statusbar.SetPaneText(0, strElapsedTime);
 
 	//disp = dispp.colRange(numberOfDisparities, img1p.cols);
 	if (alg != STEREO_VAR)
