@@ -53,11 +53,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	int m_cameraCount = 0;		// Number of Cameras
-	int m_lfCamID = -1;			// Left camera ID
-	int m_riCamID = -1;			// Right camera ID
-	CString m_prjPath = NULL;	// Current project path
-	vector<CString> m_imagelist;// Image List for calibration
+	int m_cameraCount = 0;			// Number of Cameras
+	int m_lfCamID = -1;				// Left camera ID
+	int m_riCamID = -1;				// Right camera ID
+	CString m_prjPath = NULL;		// Current project path
+	vector<CString> m_imagelist;	// Image List for calibration
 
 	// OpenCV VideoCapture parameters
 	VideoCapture m_lfCam;
@@ -68,6 +68,12 @@ private:
 	IplImage m_copyLfImage;
 	IplImage m_copyRiImage;
 	IplImage m_copyDsImage;
+	int m_frameWidth;
+	int m_frameHeight;
+
+	// Calibration parameters
+	Mat m_M1, m_D1, m_M2, m_D2;		// intrinsic parameters
+	Mat m_R, m_T;					// extrinsic parameters
 
 	// Picture Control parameters
 	HDC m_hDCLf;
@@ -80,26 +86,31 @@ private:
 	CDC *m_pDCRi;
 	CWnd *m_pwndRi;
 
-	// parameter for disparity view(HDC, Crect, CDC, Cwnd)
 	HDC m_hDCDs;
 	CRect m_rectDs;
 	CDC *m_pDCDs;
 	CWnd *m_pwndDs;
 
-	// Draw image to Picture Control
+	// Drawing image to Picture Control
 	void ShowImage(Mat &frame, IplImage &image, HDC &hdc, CRect &rect);
 
-	// Initialize Statusbar
+	// Initializing combobox
+	void InitCombobox();
+
+	// Initializing Statusbar
 	void InitStatusbar();
 
-	// Initialize Sliders
+	// Initializing Sliders
 	void InitSliders();
 
-	// Set match paramaters default
+	// Setting match paramaters default
 	void SetMatchDefaultPara();
 
-	// Set calibration paramaters default
+	// Setting calibration paramaters default
 	void SetCalDefaultPara();
+
+	// Reading calibration parameters
+	void ReadCalPara();
 
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
@@ -124,7 +135,7 @@ public:
 	double m_editBlockSize;
 	double m_editMaxDisparity;
 	double m_editScaleFactor;
-	int m_radMatchMethod;
+	int m_radMatchMethod;		// Match method ID (0-BM, 1-SGBM, 2-HH, 3-VAR, 4-SGBM 3ways)
 	afx_msg void OnBnClickedBtnMarch();
 	bool m_matchFlag = false;
 	CString m_editPrjPath;
@@ -158,4 +169,20 @@ public:
 	afx_msg void OnBnClickedRadCgbm3ways();
 	afx_msg void OnBnClickedRadBouguet();
 	afx_msg void OnBnClickedRadHartley();
+	int m_imageSource;
+	afx_msg void OnBnClickedRadFromCamera();
+	afx_msg void OnBnClickedRadFromImage();
+	CString m_staticBlockSize;
+	CString m_staticMaxDiff;
+	CString m_staticMaxDisparity;
+	CString m_staticMinDisparity;
+	CString m_staticPreCap;
+	CString m_staticScale;
+	CString m_staticSpeckleRange;
+	CString m_staticSpeckleWinSize;
+	CString m_staticTextThrs;
+	CString m_staticUniqRatio;
+	CComboBox m_cboCameraResolution;
+	int m_resolution;			// Resolution ID (0-640 * 480, 1-352 * 288, 2-320 * 240)
+	afx_msg void OnCbnSelchangeCboCameraResolution();
 };

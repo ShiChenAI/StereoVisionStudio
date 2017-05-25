@@ -20,9 +20,6 @@ using namespace std;
 using namespace cv;
 class CStereoMatchPara
 {
-	/*  [--algorithm=bm|sgbm|hh|sgbm3way] [--blocksize=<block_size>]\n"
-	"[--max-disparity=<max_disparity>] [--scale=scale_factor>] [-i=<intrinsic_filename>] [-e=<extrinsic_filename>]\n"
-	"[--no-display] [-o=<disparity_image>] [-p=<point_cloud_file>]/**/
 public:
 	CString prjName;			// project name
 	int algorithm;				// algorithm: 0-BM, 1-SGBM, 2-HH, 3-VAR, 4-SGBM3ways
@@ -31,8 +28,11 @@ public:
 	double scaleFactor;			// scale factor
 	Mat leftImage;
 	Mat rightImage;
-	CString intrinsicFilename;
-	CString extrinsicFilename;
+	//CString intrinsicFilename;
+	//CString extrinsicFilename;
+	// Calibration parameters
+	Mat M1, D1, M2, D2;			// intrinsic parameters
+	Mat R, T;					// extrinsic parameters
 
 	// Extra algorithm calculating parameters
 	int minDisparity;
