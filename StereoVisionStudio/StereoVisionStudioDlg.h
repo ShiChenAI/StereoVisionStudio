@@ -185,4 +185,7 @@ public:
 	CComboBox m_cboCameraResolution;
 	int m_resolution;			// Resolution ID (0-640 * 480, 1-352 * 288, 2-320 * 240)
 	afx_msg void OnCbnSelchangeCboCameraResolution();
+	afx_msg void OnBnClickedBtnSaveResults();
+	CString m_editResultName;
+	CString m_resultPath;
 };
