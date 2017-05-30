@@ -82,6 +82,7 @@ CStereoVisionStudioDlg::CStereoVisionStudioDlg(CWnd* pParent /*=NULL*/)
 	, m_staticSpeckleWinSize(_T(""))
 	, m_staticTextThrs(_T(""))
 	, m_staticUniqRatio(_T(""))
+	, m_editResultName(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -133,6 +134,7 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_TEXT_THRS, m_staticTextThrs);
 	DDX_Text(pDX, IDC_STATIC_UNIQ_RATIO, m_staticUniqRatio);
 	DDX_Control(pDX, IDC_CBO_CAMERA_RESOLUTION, m_cboCameraResolution);
+	DDX_Text(pDX, IDC_EDIT_RESULT_NAME, m_editResultName);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -164,6 +166,7 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RAD_FROM_CAMERA, &CStereoVisionStudioDlg::OnBnClickedRadFromCamera)
 	ON_BN_CLICKED(IDC_RAD_FROM_IMAGE, &CStereoVisionStudioDlg::OnBnClickedRadFromImage)
 	ON_CBN_SELCHANGE(IDC_CBO_CAMERA_RESOLUTION, &CStereoVisionStudioDlg::OnCbnSelchangeCboCameraResolution)
+	ON_BN_CLICKED(IDC_BTN_SAVE_RESULTS, &CStereoVisionStudioDlg::OnBnClickedBtnSaveResults)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -221,6 +224,7 @@ BOOL CStereoVisionStudioDlg::OnInitDialog()
 	GetDlgItem(IDC_BTN_CREATE_PRJ)->EnableWindow(FALSE);
 	GetDlgItem(IDC_CAP_IMAGE)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BTN_STOP_MATCH)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BTN_SAVE_RESULTS)->EnableWindow(FALSE);
 
 	// Defaults to using BOUGUET's method for calibration
 	m_radMethod = 0;
@@ -1069,6 +1073,9 @@ void CStereoVisionStudioDlg::OnBnClickedRadHartley()
 void CStereoVisionStudioDlg::OnBnClickedRadFromCamera()
 {
 	m_imageSource = 0;
+
+	GetDlgItem(IDC_BTN_SAVE_RESULTS)->EnableWindow(FALSE);
+
 	UpdateData(FALSE);
 }
 
@@ -1076,6 +1083,8 @@ void CStereoVisionStudioDlg::OnBnClickedRadFromCamera()
 void CStereoVisionStudioDlg::OnBnClickedRadFromImage()
 {
 	m_imageSource = 1;
+
+	GetDlgItem(IDC_BTN_SAVE_RESULTS)->EnableWindow(TRUE);
 
 	UpdateData(FALSE);
 }
@@ -1111,4 +1120,86 @@ void CStereoVisionStudioDlg::OnCbnSelchangeCboCameraResolution()
 	}
 
 	return;
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedBtnSaveResults()
+{
+	// Get result name
+	UpdateData(TRUE);
+
+	if (m_editResultName.GetLength() <= 0)
+	{
+		AfxMessageBox(_T("Please input result name!"));
+		return;
+	}
+
+	// Create result directory
+	m_resultPath = m_prjPath + TEXT("\\");
+	m_resultPath += m_editResultName;
+	if (PathIsDirectory(m_prjPath))
+	{
+		AfxMessageBox(_T("Result has already existed!"));
+		return;
+	}
+	if (CreateDirectory(m_prjPath, NULL))
+	{
+		AfxMessageBox(_T("Result created successfully!"));
+
+		// Save parameters
+		vector<CString> params;
+		CString line = TEXT("");
+		switch (m_radMatchMethod)
+		{
+		case 0:
+			line = TEXT("Mathod: BM");
+			break;
+		case 1:
+			line = TEXT("Mathod: SGBM");
+			break;
+		case 2:
+			line = TEXT("Mathod: HH");
+			break;
+		case 3:
+			line = TEXT("Mathod: VAR");
+			break;
+		case 4:
+			line = TEXT("Mathod: SGBM 3 ways");
+			break;
+		default:
+			line = TEXT("Mathod: BM");
+		}
+		params.push_back(line);
+		line.Format(TEXT("Result Name: %s"), m_editResultName);
+		params.push_back(line);
+		line.Format(TEXT("Block Size: %f"), m_editBlockSize);
+		params.push_back(line);
+		line.Format(TEXT("Max Disparity: %f"), m_editMaxDisparity);
+		params.push_back(line);
+		line.Format(TEXT("MIn Disparity: %d"), m_editMinDisparity);
+		params.push_back(line);
+		line.Format(TEXT("Texture Thres: %d"), m_editTextThres);
+		params.push_back(line);
+		line.Format(TEXT("Scale Factor: %f"), m_editScaleFactor);
+		params.push_back(line);
+		line.Format(TEXT("Pre-Filter Cap: %d"), m_editPreCap);
+		params.push_back(line);
+		line.Format(TEXT("Uniqueness Ratio: %d"), m_editUniqeRatio);
+		params.push_back(line);
+		line.Format(TEXT("Speckle WindowSize: %d"), m_editSpeckeWinSize);
+		params.push_back(line);
+		line.Format(TEXT("Speckle Range: %d"), m_editSpeckleRange);
+		params.push_back(line);
+		line.Format(TEXT("Disp12MaxDiff: %d"), m_editMaxDiff);
+		params.push_back(line);
+
+		CString txtPath = m_resultPath + TEXT("\\Parameters.txt");
+		CCommonUtility::SaveTextFile(m_resultPath, params);
+
+		// Save image
+		CString imagePath = m_resultPath + TEXT("\\Disparity.png");
+		cvSaveImage(m_resultPath, &m_copyDsImage);
+
+		return;
+	}
 }

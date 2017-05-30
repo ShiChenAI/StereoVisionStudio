@@ -97,3 +97,54 @@ CString CCommonUtility::GetFileName(const TCHAR * filePath, bool bIncludeExt)
 
 	return fileName;
 }
+
+void CCommonUtility::SaveTextFile(const TCHAR * fileName, const vector<CString>& lines, bool bAppendMode)
+{
+	if (bAppendMode)
+	{
+		CStdioFile file(fileName, CFile::modeCreate | CFile::modeNoTruncate | CFile::modeWrite | CFile::typeText);
+		file.SeekToEnd();
+		file.WriteString(TEXT("\n"));
+		for (int i = 0; i < lines.size(); i++)
+		{
+			file.WriteString(lines[i]);
+			if (i < lines.size() - 1)
+			{
+				file.WriteString(TEXT("\n"));
+			}
+		}
+		file.Close();
+	}
+	else
+	{
+		CStdioFile file(fileName, CFile::modeCreate | CFile::modeWrite | CFile::typeText);
+		for (int i = 0; i < lines.size(); i++)
+		{
+			file.WriteString(lines[i]);
+			if (i < lines.size() - 1)
+			{
+				file.WriteString(TEXT("\n"));
+			}
+		}
+		file.Close();
+	}
+}
+
+bool CCommonUtility::LoadTextFile(const TCHAR * fileName, vector<CString>& lines)
+{
+	lines.clear();
+	if (_taccess(fileName, 0) != -1)
+	{
+		CStdioFile file(fileName, CFile::modeRead | CFile::typeText);
+		CString strLine;
+		while (file.ReadString(strLine))
+		{
+			lines.push_back(strLine);
+		}
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
