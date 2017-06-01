@@ -184,6 +184,7 @@
     <ClInclude Include="CommonUtility.h" />
     <ClInclude Include="ConvertUtility.h" />
     <ClInclude Include="CvvImage.h" />
+    <ClInclude Include="ImageProcessing.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StereoCalib.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="CommonUtility.cpp" />
     <ClCompile Include="ConvertUtility.cpp" />
     <ClCompile Include="CvvImage.cpp" />
+    <ClCompile Include="ImageProcessing.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

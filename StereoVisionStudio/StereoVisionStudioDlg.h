@@ -19,6 +19,10 @@
 #include "StereoMatch.h"
 #include "tinyxml.h" 
 #include "afxcmn.h"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/video/background_segm.hpp"
+#include "opencv2/videoio.hpp"
+#include "ImageProcessing.h"
 
 using namespace std;
 using namespace cv;
@@ -90,6 +94,8 @@ private:
 	CRect m_rectDs;
 	CDC *m_pDCDs;
 	CWnd *m_pwndDs;
+
+	Ptr<BackgroundSubtractor> m_bgModel;
 
 	// Drawing image to Picture Control
 	void ShowImage(Mat &frame, IplImage &image, HDC &hdc, CRect &rect);
@@ -188,4 +194,6 @@ public:
 	afx_msg void OnBnClickedBtnSaveResults();
 	CString m_editResultName;
 	CString m_resultPath;
+	BOOL m_chcUseBackSub;
+	afx_msg void OnBnClickedChcUseBackSub();
 };

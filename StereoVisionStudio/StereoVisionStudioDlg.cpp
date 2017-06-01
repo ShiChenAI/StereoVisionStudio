@@ -83,6 +83,7 @@ CStereoVisionStudioDlg::CStereoVisionStudioDlg(CWnd* pParent /*=NULL*/)
 	, m_staticTextThrs(_T(""))
 	, m_staticUniqRatio(_T(""))
 	, m_editResultName(_T(""))
+	, m_chcUseBackSub(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -135,6 +136,7 @@ void CStereoVisionStudioDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_UNIQ_RATIO, m_staticUniqRatio);
 	DDX_Control(pDX, IDC_CBO_CAMERA_RESOLUTION, m_cboCameraResolution);
 	DDX_Text(pDX, IDC_EDIT_RESULT_NAME, m_editResultName);
+	DDX_Check(pDX, IDC_CHC_USE_BACK_SUB, m_chcUseBackSub);
 }
 
 BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
@@ -167,6 +169,7 @@ BEGIN_MESSAGE_MAP(CStereoVisionStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RAD_FROM_IMAGE, &CStereoVisionStudioDlg::OnBnClickedRadFromImage)
 	ON_CBN_SELCHANGE(IDC_CBO_CAMERA_RESOLUTION, &CStereoVisionStudioDlg::OnCbnSelchangeCboCameraResolution)
 	ON_BN_CLICKED(IDC_BTN_SAVE_RESULTS, &CStereoVisionStudioDlg::OnBnClickedBtnSaveResults)
+	ON_BN_CLICKED(IDC_CHC_USE_BACK_SUB, &CStereoVisionStudioDlg::OnBnClickedChcUseBackSub)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -591,8 +594,21 @@ void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 			// Capture frame from camera
 			m_lfCam >> m_lfImage;
 
-			// Draw image to HDC
-			ShowImage(m_lfImage, m_copyLfImage, m_hDCLf, m_rectLf);
+			// Use Background Subtraction
+			if (m_chcUseBackSub)
+			{
+				Mat fgImg;
+				Mat fgMask;
+				CImageProcessing::BackgroundSubtraction(m_bgModel, m_lfImage, fgMask, fgImg, true);
+
+				// Draw image to HDC
+				ShowImage(fgImg, m_copyLfImage, m_hDCLf, m_rectLf);
+			}
+			else
+			{
+				// Draw image to HDC
+				ShowImage(m_lfImage, m_copyLfImage, m_hDCLf, m_rectLf);
+			}
 		}
 
 		if (m_riCam.isOpened())
@@ -600,8 +616,21 @@ void CStereoVisionStudioDlg::OnTimer(UINT_PTR nIDEvent)
 			// Capture frame from camera
 			m_riCam >> m_riImage;
 
-			// Draw image to HDC
-			ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+			// Use Background Subtraction
+			if (m_chcUseBackSub)
+			{
+				Mat fgImg;
+				Mat fgMask;
+				CImageProcessing::BackgroundSubtraction(m_bgModel, m_riImage, fgMask, fgImg, true);
+
+				// Draw image to HDC
+				ShowImage(fgImg, m_copyRiImage, m_hDCRi, m_rectRi);
+			}
+			else
+			{
+				// Draw image to HDC
+				ShowImage(m_riImage, m_copyRiImage, m_hDCRi, m_rectRi);
+			}
 		}
 	}
 	else if (m_imageSource == 1)
@@ -1137,15 +1166,13 @@ void CStereoVisionStudioDlg::OnBnClickedBtnSaveResults()
 	// Create result directory
 	m_resultPath = m_prjPath + TEXT("\\");
 	m_resultPath += m_editResultName;
-	if (PathIsDirectory(m_prjPath))
+	if (PathIsDirectory(m_resultPath))
 	{
 		AfxMessageBox(_T("Result has already existed!"));
 		return;
 	}
-	if (CreateDirectory(m_prjPath, NULL))
+	if (CreateDirectory(m_resultPath, NULL))
 	{
-		AfxMessageBox(_T("Result created successfully!"));
-
 		// Save parameters
 		vector<CString> params;
 		CString line = TEXT("");
@@ -1194,12 +1221,25 @@ void CStereoVisionStudioDlg::OnBnClickedBtnSaveResults()
 		params.push_back(line);
 
 		CString txtPath = m_resultPath + TEXT("\\Parameters.txt");
-		CCommonUtility::SaveTextFile(m_resultPath, params);
+		CCommonUtility::SaveTextFile(txtPath, params);
 
 		// Save image
 		CString imagePath = m_resultPath + TEXT("\\Disparity.png");
-		cvSaveImage(m_resultPath, &m_copyDsImage);
+		cvSaveImage(imagePath, &m_copyDsImage);
+
+		AfxMessageBox(_T("Result saved successfully!"));
 
 		return;
+	}
+}
+
+
+void CStereoVisionStudioDlg::OnBnClickedChcUseBackSub()
+{
+	UpdateData(true);
+
+	if (m_chcUseBackSub)
+	{
+		m_bgModel = createBackgroundSubtractorMOG2().dynamicCast<BackgroundSubtractor>();
 	}
 }
